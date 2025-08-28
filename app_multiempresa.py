@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-# --- 1. IMPORTACIONES: Todas las librerías van juntas al principio ---
 import streamlit as st
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -9,23 +6,16 @@ from sklearn.pipeline import Pipeline
 import os
 import io
 
-# --- 2. CONFIGURACIÓN DE PÁGINA: Debe ser el primer comando de Streamlit ---
 st.set_page_config(
     page_title="Asistente Contable Multi-Empresa",
     layout="wide"
 )
 
-# --- 3. DEFINICIÓN DE FUNCIONES ---
-
 def check_password():
-    """Devuelve True si el usuario ingresó la contraseña correcta."""
     try:
-        # Intenta obtener la contraseña desde los Secrets de Streamlit
         correct_password = st.secrets["password"]
     except (FileNotFoundError, KeyError):
-        # Si falla (ej. al correr localmente sin secrets.toml), usa una contraseña por defecto
-        # ¡ADVERTENCIA! No uses contraseñas reales aquí. Esto es solo para facilitar pruebas locales.
-        correct_password = "test" 
+        correct_password = "test"  
         st.warning("Advertencia: No se encontraron los 'secrets'. Usando contraseña de prueba local.")
 
     st.title('🤖 Asistente Contable Multi-Empresa')
@@ -37,14 +27,12 @@ def check_password():
     if password == correct_password:
         return True
     else:
-        # Solo muestra el error si el campo de contraseña no está vacío
         if password:
             st.error("La contraseña es incorrecta.")
         st.stop()
 
 @st.cache_resource
 def cargar_y_entrenar_modelo(ruta_archivo_empresa):
-    """Carga los datos de una empresa y entrena un modelo para ella."""
     try:
         df_train = pd.read_excel(ruta_archivo_empresa, header=None, names=['numero_cuenta', 'descripcion', 'nombre_cuenta'])
         df_train.dropna(subset=['descripcion', 'nombre_cuenta'], inplace=True)
@@ -69,16 +57,12 @@ def cargar_y_entrenar_modelo(ruta_archivo_empresa):
         st.error(f"Ocurrió un error al procesar el archivo de entrenamiento: {e}")
         return None
 
-# --- 4. LÓGICA PRINCIPAL DE LA APLICACIÓN ---
-
-# Primero, verificamos la contraseña. El resto del código solo se ejecuta si es correcta.
 if check_password():
     
     st.success("Acceso concedido.")
     st.write("Selecciona una empresa para cargar su modelo de clasificación y luego sube un archivo para procesar.")
-    st.markdown("---") # Una línea divisoria para organizar
+    st.markdown("---")
 
-    # Detectar automáticamente las empresas disponibles
     try:
         lista_archivos = [f for f in os.listdir('datos_empresas') if f.endswith('.xlsx')]
         nombres_empresas = {
@@ -92,7 +76,6 @@ if check_password():
     if not lista_archivos:
         st.warning("No se encontraron archivos de entrenamiento en la carpeta 'datos_empresas'.")
     else:
-        # Crear el menú desplegable para seleccionar la empresa
         archivo_seleccionado = st.selectbox(
             "Selecciona la Empresa",
             options=lista_archivos,
@@ -103,7 +86,6 @@ if check_password():
             ruta_completa_archivo = os.path.join('datos_empresas', archivo_seleccionado)
             modelo_activo = cargar_y_entrenar_modelo(ruta_completa_archivo)
 
-            # Mostrar el resto de la interfaz SOLO si el modelo se cargó correctamente
             if modelo_activo:
                 st.header("Cargar archivo para clasificar")
                 uploaded_file = st.file_uploader("Elige un archivo Excel (.xlsx)", type="xlsx", key=archivo_seleccionado)
@@ -125,7 +107,6 @@ if check_password():
                                 st.success("¡Clasificación completada!")
                                 st.dataframe(df_a_clasificar.head())
                                 
-                                # Ofrecer el archivo para descargar
                                 output = io.BytesIO()
                                 with pd.ExcelWriter(output, engine='openpyxl') as writer:
                                     df_a_clasificar.to_excel(writer, index=False, sheet_name='Clasificaciones')
