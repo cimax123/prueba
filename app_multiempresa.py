@@ -100,10 +100,18 @@ if check_password():
                     if st.button('Clasificar Archivo'):
                         if nombre_columna and nombre_columna in df_a_clasificar.columns:
                             with st.spinner('Clasificando...'):
-                               descripciones = ["" if isinstance(texto, float) or texto is None else str(texto) for texto in descripciones]
-                                descripciones = df_a_clasificar[nombre_columna].astype(str).str.lower()
+                                
+                                # --- INICIO DE LA SECCIÓN CORREGIDA ---
+                                # 1. Extraemos la columna y rellenamos nulos con vacío
+                                descripciones = df_a_clasificar[nombre_columna].fillna("")
+                                
+                                # 2. Convertimos todo a texto y minúsculas
+                                descripciones = descripciones.astype(str).str.lower()
+                                
+                                # 3. Hacemos la predicción
                                 predicciones = modelo_activo.predict(descripciones)
                                 df_a_clasificar['cuenta_sugerida'] = predicciones
+                                # --- FIN DE LA SECCIÓN CORREGIDA ---
                                 
                                 st.success("¡Clasificación completada!")
                                 st.dataframe(df_a_clasificar.head())
