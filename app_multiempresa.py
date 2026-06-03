@@ -100,6 +100,7 @@ if check_password():
                     if st.button('Clasificar Archivo'):
                         if nombre_columna and nombre_columna in df_a_clasificar.columns:
                             with st.spinner('Clasificando...'):
+                                descripciones = descripciones.fillna("")
                                 descripciones = df_a_clasificar[nombre_columna].astype(str).str.lower()
                                 predicciones = modelo_activo.predict(descripciones)
                                 df_a_clasificar['cuenta_sugerida'] = predicciones
